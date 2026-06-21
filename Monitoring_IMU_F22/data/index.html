@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html lang="id">
+<head>
+  <title>F-22 IMU Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/107/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.107.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+
+  <!-- ── HEADER ─────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="brand-icon">▲</div>
+      <div class="brand-text">
+        <span class="brand-title">F-22 RAPTOR</span>
+        <span class="brand-sub">INERTIAL MEASUREMENT UNIT DASHBOARD</span>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-item">
+        <span class="status-dot" id="dot-conn"></span>
+        <span class="status-label" id="label-conn">OFFLINE</span>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        <span class="status-dot" id="dot-warn"></span>
+        <span class="status-label" id="label-warn">NORMAL</span>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        <span class="status-label muted" id="fps-counter">-- FPS</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ───────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Sidebar kiri -->
+    <aside class="sidebar">
+
+      <!-- Gyroscope -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-tag">01</span>
+          <span class="panel-name">GYROSCOPE</span>
+          <span class="panel-unit">rad/s</span>
+        </div>
+        <div class="sensor-row">
+          <span class="axis-label ax-x">X</span>
+          <div class="bar-track"><div class="bar-fill bf-x" id="bar-gx"></div></div>
+          <span class="sensor-val" id="gyroX">0.00</span>
+        </div>
+        <div class="sensor-row">
+          <span class="axis-label ax-y">Y</span>
+          <div class="bar-track"><div class="bar-fill bf-y" id="bar-gy"></div></div>
+          <span class="sensor-val" id="gyroY">0.00</span>
+        </div>
+        <div class="sensor-row">
+          <span class="axis-label ax-z">Z</span>
+          <div class="bar-track"><div class="bar-fill bf-z" id="bar-gz"></div></div>
+          <span class="sensor-val" id="gyroZ">0.00</span>
+        </div>
+      </div>
+
+      <!-- Accelerometer -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-tag">02</span>
+          <span class="panel-name">ACCELEROMETER</span>
+          <span class="panel-unit">m/s²</span>
+        </div>
+        <div class="sensor-row">
+          <span class="axis-label ax-x">X</span>
+          <div class="bar-track"><div class="bar-fill bf-x" id="bar-ax"></div></div>
+          <span class="sensor-val" id="accX">0.00</span>
+        </div>
+        <div class="sensor-row">
+          <span class="axis-label ax-y">Y</span>
+          <div class="bar-track"><div class="bar-fill bf-y" id="bar-ay"></div></div>
+          <span class="sensor-val" id="accY">0.00</span>
+        </div>
+        <div class="sensor-row">
+          <span class="axis-label ax-z">Z</span>
+          <div class="bar-track"><div class="bar-fill bf-z" id="bar-az"></div></div>
+          <span class="sensor-val" id="accZ">0.00</span>
+        </div>
+      </div>
+
+      <!-- Temperature -->
+      <div class="panel panel-temp">
+        <div class="panel-head">
+          <span class="panel-tag">03</span>
+          <span class="panel-name">TEMPERATURE</span>
+        </div>
+        <div class="temp-big">
+          <span id="temp">0.00</span><span class="temp-deg">°C</span>
+        </div>
+      </div>
+
+      <!-- Controls: Calibrate -->
+      <div class="panel ctrl-panel">
+        <div class="panel-head">
+          <span class="panel-tag">04</span>
+          <span class="panel-name">CALIBRATION</span>
+        </div>
+        <button id="btn-calibrate" class="ctrl-btn btn-accent" onclick="calibrate()">
+          ◎ &nbsp;CALIBRATE SENSOR
+        </button>
+      </div>
+
+      <!-- Controls: Camera -->
+      <div class="panel ctrl-panel">
+        <div class="panel-head">
+          <span class="panel-tag">05</span>
+          <span class="panel-name">CAMERA ZOOM</span>
+        </div>
+        <div class="btn-row">
+          <button class="ctrl-btn btn-half" onclick="zoomIn()">＋ ZOOM IN</button>
+          <button class="ctrl-btn btn-half" onclick="zoomOut()">－ ZOOM OUT</button>
+        </div>
+      </div>
+
+      <!-- Controls: Reset -->
+      <div class="panel ctrl-panel">
+        <div class="panel-head">
+          <span class="panel-tag">06</span>
+          <span class="panel-name">RESET POSITION</span>
+        </div>
+        <button class="ctrl-btn btn-full mb6" onclick="resetPosition('reset')">↺ &nbsp;RESET ALL AXES</button>
+        <div class="btn-row">
+          <button class="ctrl-btn btn-axis" onclick="resetPosition('resetX')">RST X</button>
+          <button class="ctrl-btn btn-axis" onclick="resetPosition('resetY')">RST Y</button>
+          <button class="ctrl-btn btn-axis" onclick="resetPosition('resetZ')">RST Z</button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Viewport 3D -->
+    <section class="viewport">
+      <!-- Scanner line (signature element) -->
+      <div class="scanner-line"></div>
+
+      <!-- Corner overlays -->
+      <div class="corner tl">LOCKHEED MARTIN F-22A RAPTOR</div>
+      <div class="corner tr" id="status-recording">⏸ STANDBY</div>
+      <div class="corner bl">PITCH · ROLL · YAW</div>
+      <div class="corner br">REAL-TIME 3D VISUALIZATION</div>
+
+      <!-- Cross reticle -->
+      <div class="reticle"></div>
+
+      <!-- Loading -->
+      <div id="loading-text">LOADING MODEL...</div>
+
+      <!-- Canvas -->
+      <div id="3Dcube"></div>
+    </section>
+
+  </main>
+
+<script src="script.js"></script>
+</body>
+</html>
